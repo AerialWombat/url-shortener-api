@@ -1,17 +1,71 @@
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcrypt-nodejs");
+const knex = require("knex");
 
 const app = express();
 
+const database = knex({
+  client: "pg",
+  connection: {
+    host: "127.0.0.1",
+    user: "django",
+    password: "",
+    database: "url-short"
+  }
+});
+
 app.use(cors());
+app.use(express.json());
+// app.use(express.urlencoded({ urlencoded: false }));
 
 app.get("/api", (req, res) => {
-  res.send("API server reached");
+  res.json("API server reached");
 });
 
 app.post("/api/register", (req, res) => {
-  console.log("Register: ", req);
-  res.json("Register request received");
+  const { email, username, password } = req.body;
+  // Selects current data from "users" table and checks if submitted email and username already exist.
+  database("users")
+    .select()
+    .from("users")
+    .then(tableData => {
+      const emailExists = tableData.some(element => element.email === email);
+      const usernameExists = tableData.some(
+        element => element.username === username
+      );
+      if (emailExists) {
+        res.status(400).json({ msg: `E-mail already in use.` });
+      } else if (usernameExists) {
+        res.status(400).json({ msg: `Username already in use.` });
+      } else {
+        // Store user info in database
+        database("users")
+          .returning("*")
+          .insert({
+            username: username,
+            email: email,
+            joined: new Date()
+          })
+          .catch(error => res.status(400).json(error));
+
+        //Add user login information with hashed password
+        bcrypt.hash(password, null, null, (err, hash) => {
+          database("login")
+            .returning("*")
+            .insert({
+              hash: hash,
+              email: email
+            })
+            .then(response => res.status(200).json(response))
+            .catch(error => res.status(400).json(error));
+        });
+      }
+    });
+});
+
+app.get("/api/logininfo", (req, res) => {
+  res.status(200).json(loginInfo);
 });
 
 const PORT = process.env.PORT || 5000;
