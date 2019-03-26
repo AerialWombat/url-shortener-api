@@ -94,12 +94,6 @@ app.post("/api/register", (req, res) => {
     });
 });
 
-app.get("/api/logininfo", (req, res) => {
-  database("login")
-    .select()
-    .then(data => res.status(200).json(data));
-});
-
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
