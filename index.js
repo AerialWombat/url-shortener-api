@@ -17,7 +17,7 @@ const database = knex({
 
 app.use(cors());
 app.use(express.json());
-// app.use(express.urlencoded({ urlencoded: false }));
+app.use(express.urlencoded({ extended: false }));
 
 app.get("/api", (req, res) => {
   res.json("API server reached");
@@ -31,9 +31,13 @@ app.post("/api/register", (req, res) => {
     .from("users")
     .then(tableData => {
       const emailExists = tableData.some(element => element.email === email);
+
+      // Check if username exists in database
       const usernameExists = tableData.some(
         element => element.username === username
       );
+
+      // Check if email exists in database
       if (emailExists) {
         res.status(400).json({ msg: `E-mail already in use.` });
       } else if (usernameExists) {
@@ -65,7 +69,9 @@ app.post("/api/register", (req, res) => {
 });
 
 app.get("/api/logininfo", (req, res) => {
-  res.status(200).json(loginInfo);
+  database("login")
+    .select()
+    .then(data => res.status(200).json(data));
 });
 
 const PORT = process.env.PORT || 5000;
