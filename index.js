@@ -23,6 +23,33 @@ app.get("/api", (req, res) => {
   res.json("API server reached");
 });
 
+// Selects matching record and compares hash, then returns user data. Else, returns error.
+app.post("/api/login", (req, res) => {
+  const { email, password } = req.body;
+  database("login")
+    .select("hash", "email")
+    .where("email", "=", email)
+    .then(data => {
+      const isPassValid = bcrypt.compareSync(password, data[0].hash);
+      if (isPassValid) {
+        return database("users")
+          .select("*")
+          .where("email", "=", email)
+          .then(user => {
+            res.status(200).json(user[0]);
+          })
+          .catch(error => res.status(400).json(error));
+      } else {
+        return res
+          .status(400)
+          .json({ msg: `E-mail or password are incorrect.` });
+      }
+    })
+    .catch(error => {
+      res.status(400).json({ msg: `E-mail or password are incorrect.` });
+    });
+});
+
 app.post("/api/register", (req, res) => {
   const { email, username, password } = req.body;
   // Selects current data from "users" table and checks if submitted email and username already exist.
@@ -54,16 +81,15 @@ app.post("/api/register", (req, res) => {
           .catch(error => res.status(400).json(error));
 
         //Add user login information with hashed password
-        bcrypt.hash(password, null, null, (err, hash) => {
-          database("login")
-            .returning("*")
-            .insert({
-              hash: hash,
-              email: email
-            })
-            .then(response => res.status(200).json(response))
-            .catch(error => res.status(400).json(error));
-        });
+        const hash = bcrypt.hashSync(password);
+        database("login")
+          .returning("*")
+          .insert({
+            hash: hash,
+            email: email
+          })
+          .then(response => res.status(200).json(response))
+          .catch(error => res.status(400).json(error));
       }
     });
 });
