@@ -26,6 +26,9 @@ app.get("/api", (req, res) => {
 // Selects matching record and compares hash, then returns user data. Else, returns error.
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ msg: `Missing log-in information` });
+  }
   database("login")
     .select("hash", "email")
     .where("email", "=", email)
@@ -52,6 +55,9 @@ app.post("/api/login", (req, res) => {
 
 app.post("/api/register", (req, res) => {
   const { email, username, password } = req.body;
+  if (!email || !username || !password) {
+    return res.status(400).json({ msg: `Missing registration information` });
+  }
   // Selects current data from "users" table and checks if submitted email and username already exist.
   database("users")
     .select()
