@@ -105,6 +105,7 @@ app.post("/api/register", (req, res) => {
 app.post("/api/shorten", (req, res) => {
   const { longUrl, username } = req.body;
   // Validate for URL format
+  console.log(`Incoming URL: ${longUrl}`);
   urlExists(longUrl, (err, exists) => {
     if (exists) {
       // Check if url has previously been shortened
@@ -121,7 +122,7 @@ app.post("/api/shorten", (req, res) => {
               .then(data =>
                 res.status(200).json({
                   msg: `Pre-existing URL`,
-                  slug: data[0].slug
+                  shortUrl: `localhost:5000/${data[0].slug}`
                 })
               );
           }
@@ -139,7 +140,7 @@ app.post("/api/shorten", (req, res) => {
               .then(data =>
                 res.status(200).json({
                   msg: `URL successfully shortened`,
-                  slug: data[0].slug
+                  shortUrl: `localhost:5000/${data[0].slug}`
                 })
               )
               .catch(error => console.log(error));
@@ -147,13 +148,13 @@ app.post("/api/shorten", (req, res) => {
         })
         .catch(error => res.status(400).json(error));
     } else {
-      res.status(400).json(`URL does not exists`);
+      res.status(400).json({ msg: `URL does not exist` });
     }
   });
 });
 
+// Take slug as parameter, look up original URL, and then redirect
 app.get("/:slug", (req, res) => {
-  console.log(req.params.slug);
   database("urls")
     .select()
     .where("slug", "=", req.params.slug)
