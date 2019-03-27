@@ -152,6 +152,14 @@ app.post("/api/shorten", (req, res) => {
   });
 });
 
+app.get("/:slug", (req, res) => {
+  console.log(req.params.slug);
+  database("urls")
+    .select()
+    .where("slug", "=", req.params.slug)
+    .then(data => res.redirect(301, data[0].longurl));
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
