@@ -1,7 +1,9 @@
-const express = require("express");
-const cors = require("cors");
 const bcrypt = require("bcrypt-nodejs");
+const cors = require("cors");
+const express = require("express");
 const knex = require("knex");
+const urlExists = require("url-exists");
+const helper = require("./helper");
 
 const app = express();
 
@@ -98,6 +100,56 @@ app.post("/api/register", (req, res) => {
           .catch(error => res.status(400).json(error));
       }
     });
+});
+
+app.post("/api/shorten", (req, res) => {
+  const { longUrl, username } = req.body;
+  // Validate for URL format
+  urlExists(longUrl, (err, exists) => {
+    if (exists) {
+      // Check if url has previously been shortened
+      database("urls")
+        .select()
+        .where("longurl", "=", longUrl)
+        .then(data => {
+          // If url has been shortened, select previously made slug and return it
+          if (data.length) {
+            database("urls")
+              .returning("*")
+              .select()
+              .where("longurl", "=", longUrl)
+              .then(data =>
+                res.status(200).json({
+                  msg: `Pre-existing URL`,
+                  slug: data[0].slug
+                })
+              );
+          }
+          // If new url, create hash, store, and return shortened url
+          else {
+            const slug = helper.shortenUrl(longUrl, 0, 5);
+            database("urls")
+              .returning("*")
+              .insert({
+                longurl: longUrl,
+                slug: slug,
+                created: new Date(),
+                username: username
+              })
+              .then(data =>
+                res.status(200).json({
+                  msg: `URL successfully shortened`,
+                  slug: data[0].slug
+                })
+              )
+              .catch(error => console.log(error));
+          }
+        })
+        .catch(error => res.status(400).json(error));
+    } else {
+      res.status(400).json(`URL does not exists`);
+    }
+  });
 });
 
 const PORT = process.env.PORT || 5000;
