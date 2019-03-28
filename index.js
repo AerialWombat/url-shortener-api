@@ -153,6 +153,19 @@ app.post("/api/shorten", (req, res) => {
   });
 });
 
+// Checks for a provided user, if existing, returns all links & slugs user has created
+app.get("/api/links/:user", (req, res) => {
+  if (!req.params.user) {
+    res.status(400).json({ msg: `No user provided` });
+  } else {
+    database("urls")
+      .select("longurl", "slug")
+      .where("username", "=", req.params.user)
+      .then(data => res.status(200).json(data))
+      .catch(error => res.status(400).json(error));
+  }
+});
+
 // Take slug as parameter, look up original URL, and then redirect
 app.get("/:slug", (req, res) => {
   database("urls")
