@@ -3,6 +3,7 @@ const cors = require("cors");
 const express = require("express");
 const knex = require("knex");
 const urlExists = require("url-exists");
+
 const helper = require("./helper");
 
 const app = express();
@@ -105,7 +106,6 @@ app.post("/api/register", (req, res) => {
 app.post("/api/shorten", (req, res) => {
   const { longUrl, username } = req.body;
   // Validate for URL format
-  console.log(`Incoming URL: ${longUrl}`);
   urlExists(longUrl, (err, exists) => {
     if (exists) {
       // Check if url has previously been shortened
