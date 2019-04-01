@@ -20,10 +20,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.get("/api", (req, res) => {
-  res.json("API server reached");
-});
-
 // Selects matching record and compares hash, then returns user data. Else, returns error.
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
@@ -120,7 +116,7 @@ app.post("/api/shorten", (req, res) => {
               .then(data =>
                 res.status(200).json({
                   msg: `Pre-existing URL`,
-                  shortUrl: `localhost:5000/${data[0].slug}`
+                  shortUrl: `https://urlshrt0.herokuapp.com/${data[0].slug}`
                 })
               );
           }
@@ -138,7 +134,7 @@ app.post("/api/shorten", (req, res) => {
               .then(data =>
                 res.status(200).json({
                   msg: `URL successfully shortened`,
-                  shortUrl: `localhost:5000/${data[0].slug}`
+                  shortUrl: `https://urlshrt0.herokuapp.com/${data[0].slug}`
                 })
               )
               .catch(error => console.log(error));
